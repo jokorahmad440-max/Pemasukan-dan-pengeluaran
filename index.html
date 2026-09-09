@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catatan Saldo - Dollar & Riel</title>
+    <!-- Tailwind CSS untuk Desain Rapi & Elegan -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
+
+    <!-- ================= HALAMAN LOGIN ================= -->
+    <div id="loginPage" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl w-full max-w-md text-center">
+            <div class="mb-6">
+                <div class="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
+                    <i class="fa-solid fa-vault"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">SALDO DOLLAR & RIEL</h1>
+                <p class="text-slate-400 text-xs mt-1">Sistem Keamanan & Integrasi Sheets</p>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Password Akses</label>
+                    <input type="password" id="passwordInput" required placeholder="Masukkan password..." 
+                        class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:outline-none focus:border-emerald-500 text-white transition">
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition shadow-lg shadow-emerald-500/20">
+                    Masuk Aplikasi
+                </button>
+                <p id="loginError" class="text-rose-400 text-xs text-center hidden font-medium">Password salah! Silakan periksa kembali.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= HALAMAN UTAMA APLIKASI ================= -->
+    <div id="appPage" class="hidden flex-1 flex flex-col">
+        <!-- Navbar -->
+        <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500 text-slate-950 p-2.5 rounded-xl font-bold shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid fa-chart-pie text-base"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-base text-white tracking-wide">SALDO DOLLAR DAN RIEL</h2>
+                    <span class="text-[11px] text-emerald-400 flex items-center gap-1.5 font-medium"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Auto-Sync Google Sheets</span>
+                </div>
+            </div>
+
+            <!-- Profil & Upload Foto Permanen -->
+            <div class="flex items-center space-x-4">
+                <div class="relative group cursor-pointer" onclick="document.getElementById('fotoInput').click()" title="Klik untuk mengganti foto profil">
+                    <img id="profilePic" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Profil" class="w-11 h-11 rounded-full object-cover border-2 border-emerald-500 shadow-md">
+                    <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-xs">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+                <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="uploadFoto(event)">
+                <button onclick="handleLogout()" class="bg-slate-800 hover:bg-rose-500/10 hover:text-rose-400 text-slate-300 px-3.5 py-2 rounded-xl text-xs font-semibold transition border border-slate-700/50">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar
+                </button>
+            </div>
+        </header>
+
+        <!-- Konten Utama -->
+        <main class="max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
+            
+            <!-- Form Input Data -->
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl h-fit">
+                <h3 class="text-base font-bold mb-4 text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-plus"></i> Input Transaksi Baru
+                </h3>
+                <form id="transaksiForm" onsubmit="submitData(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Tanggal</label>
+                        <input type="date" id="tanggal" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Catatan (Masuk & Keluar)</label>
+                        <input type="text" id="catatan" placeholder="Keterangan transaksi..." required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Uang Masuk</label>
+                        <input type="number" id="uangMasuk" value="0" step="any" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Uang Keluar</label>
+                        <input type="number" id="uangKeluar" value="0" step="any" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    </div>
+                    <button type="submit" id="submitBtn" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-500/20 mt-2">
+                        Simpan & Sinkronkan
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tabel Data Live Sinkronisasi -->
+            <div class="lg:col-span-2 bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-base font-bold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-table-cells"></i> Data Live dari Spreadsheet
+                    </h3>
+                    <button onclick="fetchDataSheets()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/50 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-300">
+                        <i class="fa-solid fa-rotate" id="syncIcon"></i> Refresh Data
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto flex-1 border border-slate-800 rounded-2xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950/80 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
+                                <th class="p-3.5">Tanggal</th>
+                                <th class="p-3.5">Catatan</th>
+                                <th class="p-3.5">Uang Masuk</th>
+                                <th class="p-3.5">Uang Keluar</th>
+                                <th class="p-3.5">Total Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="text-sm divide-y divide-slate-800/50">
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-slate-500">Memuat data dari Google Sheets...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="text-center py-4 text-xs text-slate-600 border-t border-slate-900 mt-6">
+            Spreadsheet ID: 1Hw5HD4te8reI6tK6EFku3krkYNdO9a29fRxJOJQsJkg &bull; Sheet: SALDO DOLLAR DAN RIEL
+        </footer>
+    </div>
+
+    <!-- ================= SCRIPT JAVASCRIPT ================= -->
+    <script>
+        // Password login yang bisa Anda ubah sesuka hati
+        const APP_PASSWORD = "admin"; 
+        
+        // Ganti URL di bawah ini dengan URL Web App Apps Script Anda
+        const WEB_APP_URL = "URL_WEB_APP_GOOGLE_APPS_SCRIPT_ANDA"; 
+
+        window.onload = function() {
+            // Auto Login Check
+            if(localStorage.getItem("isLoggedIn") === "true") {
+                showApp();
+            }
+            // Load Foto Profil Tersimpan Permanen
+            const savedPhoto = localStorage.getItem("profilePhoto");
+            if(savedPhoto) {
+                document.getElementById('profilePic').src = savedPhoto;
+            }
+            document.getElementById('tanggal').valueAsDate = new Date();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('passwordInput').value;
+            if(pass === APP_PASSWORD) {
+                localStorage.setItem("isLoggedIn", "true");
+                showApp();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function showApp() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('appPage').classList.remove('hidden');
+            fetchDataSheets();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("isLoggedIn");
+            location.reload();
+        }
+
+        // Upload & Simpan Foto Profil Permanen ke LocalStorage
+        function uploadFoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Image = e.target.result;
+                    document.getElementById('profilePic').src = base64Image;
+                    localStorage.setItem("profilePhoto", base64Image);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Kirim Data Transaksi ke Google Sheets
+        function submitData(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Menyimpan...";
+            btn.disabled = true;
+
+            const data = {
+                tanggal: document.getElementById('tanggal').value,
+                catatan: document.getElementById('catatan').value,
+                uangMasuk: document.getElementById('uangMasuk').value || 0,
+                uangKeluar: document.getElementById('uangKeluar').value || 0
+            };
+
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).then(() => {
+                alert("Data berhasil dicatat & disinkronkan ke Sheets!");
+                document.getElementById('transaksiForm').reset();
+                document.getElementById('tanggal').valueAsDate = new Date();
+                btn.innerText = "Simpan & Sinkronkan";
+                btn.disabled = false;
+                setTimeout(fetchDataSheets, 2000);
+            }).catch(err => {
+                alert("Gagal terhubung ke Google Sheets: " + err);
+                btn.innerText = "Simpan & Sinkronkan";
+                btn.disabled = false;
+            });
+        }
+
+        // Ambil Data Live dari Google Sheets
+        function fetchDataSheets() {
+            const syncIcon = document.getElementById('syncIcon');
+            syncIcon.classList.add('fa-spin');
+
+            fetch(WEB_APP_URL + "?action=getData")
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('dataTableBody');
+                    tbody.innerHTML = "";
+                    
+                    if(data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada data tercatat.</td></tr>`;
+                        syncIcon.classList.remove('fa-spin');
+                        return;
+                    }
+
+                    data.reverse().forEach(row => {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="p-3.5 text-slate-300">${row.tanggal ? row.tanggal.substring(0,10) : '-'}</td>
+                                <td class="p-3.5 font-medium text-white">${row.catatan}</td>
+                                <td class="p-3.5 text-emerald-400 font-semibold">+${Number(row.uangMasuk).toLocaleString()}</td>
+                                <td class="p-3.5 text-rose-400 font-semibold">-${Number(row.uangKeluar).toLocaleString()}</td>
+                                <td class="p-3.5 text-white font-bold">${row.totalSaldo !== "" ? Number(row.totalSaldo).toLocaleString() : '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    syncIcon.classList.remove('fa-spin');
+                })
+                .catch(err => {
+                    console.error("Gagal memuat:", err);
+                    document.getElementById('dataTableBody').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-400">Gagal memuat data live. Periksa URL Web App.</td></tr>`;
+                    syncIcon.classList.remove('fa-spin');
+                });
+        }
+    </script>
+</body>
+</html>

@@ -19,7 +19,7 @@
                     <i class="fa-solid fa-vault"></i>
                 </div>
                 <h1 class="text-2xl font-bold tracking-tight text-white">SALDO DOLLAR & RIEL</h1>
-                <p class="text-slate-400 text-xs mt-1">Sistem Keamanan & Integrasi Sheets</p>
+                <p class="text-slate-400 text-xs mt-1">Kurs Otomatis ($1 = 4.000 Riel)</p>
             </div>
             
             <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-left">
@@ -46,7 +46,7 @@
                 </div>
                 <div>
                     <h2 class="font-bold text-base text-white tracking-wide">SALDO DOLLAR DAN RIEL</h2>
-                    <span class="text-[11px] text-emerald-400 flex items-center gap-1.5 font-medium"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Auto-Sync Google Sheets</span>
+                    <span class="text-[11px] text-emerald-400 flex items-center gap-1.5 font-medium"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Kurs: $1 = 4.000 Riel (Auto-Sync)</span>
                 </div>
             </div>
 
@@ -71,7 +71,7 @@
             <!-- Form Input Data -->
             <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl h-fit">
                 <h3 class="text-base font-bold mb-4 text-emerald-400 flex items-center gap-2">
-                    <i class="fa-solid fa-circle-plus"></i> Input Transaksi Baru
+                    <i class="fa-solid fa-circle-plus"></i> Input Transaksi ($ / Riel)
                 </h3>
                 <form id="transaksiForm" onsubmit="submitData(event)" class="space-y-4">
                     <div>
@@ -79,16 +79,20 @@
                         <input type="date" id="tanggal" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Catatan (Masuk & Keluar)</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Catatan (Keterangan)</label>
                         <input type="text" id="catatan" placeholder="Keterangan transaksi..." required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Uang Masuk</label>
-                        <input type="number" id="uangMasuk" value="0" step="any" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Uang Masuk ($)</label>
+                        <input type="number" id="uangMasuk" value="0" step="any" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white" oninput="hitungPreview()">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Uang Keluar</label>
-                        <input type="number" id="uangKeluar" value="0" step="any" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Uang Keluar ($)</label>
+                        <input type="number" id="uangKeluar" value="0" step="any" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-white" oninput="hitungPreview()">
+                    </div>
+                    <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/80 text-xs text-slate-300">
+                        <span class="text-slate-400">Estimasi Masuk ke Riel:</span> <span id="previewMasuk" class="text-emerald-400 font-bold">0 Riel</span><br>
+                        <span class="text-slate-400">Estimasi Keluar ke Riel:</span> <span id="previewKeluar" class="text-rose-400 font-bold">0 Riel</span>
                     </div>
                     <button type="submit" id="submitBtn" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-500/20 mt-2">
                         Simpan & Sinkronkan
@@ -100,7 +104,7 @@
             <div class="lg:col-span-2 bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-base font-bold text-emerald-400 flex items-center gap-2">
-                        <i class="fa-solid fa-table-cells"></i> Data Live dari Spreadsheet
+                        <i class="fa-solid fa-table-cells"></i> Data Live dari Spreadsheet (Riel)
                     </h3>
                     <button onclick="fetchDataSheets()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/50 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-300">
                         <i class="fa-solid fa-rotate" id="syncIcon"></i> Refresh Data
@@ -139,15 +143,13 @@
         // Password login yang bisa Anda ubah sesuka hati
         const APP_PASSWORD = "admin"; 
         
-        // Ganti URL di bawah ini dengan URL Web App Apps Script Anda
+        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
         const WEB_APP_URL = "URL_WEB_APP_GOOGLE_APPS_SCRIPT_ANDA"; 
 
         window.onload = function() {
-            // Auto Login Check
             if(localStorage.getItem("isLoggedIn") === "true") {
                 showApp();
             }
-            // Load Foto Profil Tersimpan Permanen
             const savedPhoto = localStorage.getItem("profilePhoto");
             if(savedPhoto) {
                 document.getElementById('profilePic').src = savedPhoto;
@@ -191,18 +193,30 @@
             }
         }
 
-        // Kirim Data Transaksi ke Google Sheets
+        // Hitung preview perkalian 4000 sebelum disimpan
+        function hitungPreview() {
+            const masuk = parseFloat(document.getElementById('uangMasuk').value) || 0;
+            const keluar = parseFloat(document.getElementById('uangKeluar').value) || 0;
+            document.getElementById('previewMasuk').innerText = (masuk * 4000).toLocaleString() + " Riel";
+            document.getElementById('previewKeluar').innerText = (keluar * 4000).toLocaleString() + " Riel";
+        }
+
+        // Kirim Data Transaksi ke Google Sheets (Otomatis dikali 4000 di backend/frontend)
         function submitData(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "Menyimpan...";
+            btn.innerText = "Menyimpan & Mengalikan Kurs...";
             btn.disabled = true;
+
+            const valMasuk = parseFloat(document.getElementById('uangMasuk').value) || 0;
+            const valKeluar = parseFloat(document.getElementById('uangKeluar').value) || 0;
 
             const data = {
                 tanggal: document.getElementById('tanggal').value,
                 catatan: document.getElementById('catatan').value,
-                uangMasuk: document.getElementById('uangMasuk').value || 0,
-                uangKeluar: document.getElementById('uangKeluar').value || 0
+                // Otomatis dikali 4000 agar akurat tersimpan dalam bentuk Riel
+                uangMasuk: valMasuk * 4000,
+                uangKeluar: valKeluar * 4000
             };
 
             fetch(WEB_APP_URL, {
@@ -211,9 +225,11 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             }).then(() => {
-                alert("Data berhasil dicatat & disinkronkan ke Sheets!");
+                alert("Data berhasil dikonversi (x4.000) dan disinkronkan ke Sheets!");
                 document.getElementById('transaksiForm').reset();
                 document.getElementById('tanggal').valueAsDate = new Date();
+                document.getElementById('previewMasuk').innerText = "0 Riel";
+                document.getElementById('previewKeluar').innerText = "0 Riel";
                 btn.innerText = "Simpan & Sinkronkan";
                 btn.disabled = false;
                 setTimeout(fetchDataSheets, 2000);
@@ -246,8 +262,8 @@
                             <tr class="hover:bg-slate-800/40 transition">
                                 <td class="p-3.5 text-slate-300">${row.tanggal ? row.tanggal.substring(0,10) : '-'}</td>
                                 <td class="p-3.5 font-medium text-white">${row.catatan}</td>
-                                <td class="p-3.5 text-emerald-400 font-semibold">+${Number(row.uangMasuk).toLocaleString()}</td>
-                                <td class="p-3.5 text-rose-400 font-semibold">-${Number(row.uangKeluar).toLocaleString()}</td>
+                                <td class="p-3.5 text-emerald-400 font-semibold">${row.uangMasuk > 0 ? '+' + Number(row.uangMasuk).toLocaleString() : '-'}</td>
+                                <td class="p-3.5 text-rose-400 font-semibold">${row.uangKeluar > 0 ? '-' + Number(row.uangKeluar).toLocaleString() : '-'}</td>
                                 <td class="p-3.5 text-white font-bold">${row.totalSaldo !== "" ? Number(row.totalSaldo).toLocaleString() : '-'}</td>
                             </tr>
                         `;

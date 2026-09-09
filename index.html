@@ -138,12 +138,11 @@
         </footer>
     </div>
 
-    <!-- ================= SCRIPT JAVASCRIPT ================= -->
+    <!-- ================= SCRIPT JAVASCRIPT FRONTEND ================= -->
     <script>
-        // Password login yang bisa Anda ubah sesuka hati
-        const APP_PASSWORD = "admin"; 
+        const APP_PASSWORD = "admin"; // Password login aplikasi
         
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+        // ⚠️ MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI DALAM TANDA KUTIP DI BAWAH INI:
         const WEB_APP_URL = "URL_WEB_APP_GOOGLE_APPS_SCRIPT_ANDA"; 
 
         window.onload = function() {
@@ -201,7 +200,7 @@
             document.getElementById('previewKeluar').innerText = (keluar * 4000).toLocaleString() + " Riel";
         }
 
-        // Kirim Data Transaksi ke Google Sheets (Otomatis dikali 4000 di backend/frontend)
+        // Kirim Data Transaksi ke Google Sheets (Otomatis dikali 4000)
         function submitData(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -214,7 +213,6 @@
             const data = {
                 tanggal: document.getElementById('tanggal').value,
                 catatan: document.getElementById('catatan').value,
-                // Otomatis dikali 4000 agar akurat tersimpan dalam bentuk Riel
                 uangMasuk: valMasuk * 4000,
                 uangKeluar: valKeluar * 4000
             };
@@ -279,3 +277,54 @@
     </script>
 </body>
 </html>
+
+<!-- 
+  ===========================================================================
+  KODE GOOGLE APPS SCRIPT (BACKEND) - SALIN KODE DI BAWAH INI KE APPS SCRIPT
+  ===========================================================================
+  var SS_ID = "1Hw5HD4te8reI6tK6EFku3krkYNdO9a29fRxJOJQsJkg";
+  var SHEET_NAME = "SALDO DOLLAR DAN RIEL";
+
+  function doGet(e) {
+    var action = e.parameter ? e.parameter.action : "";
+    if (action === "getData") { return getData(); }
+    return ContentService.createTextOutput("Backend Aktif & Terhubung!");
+  }
+
+  function doPost(e) {
+    var lock = LockService.getScriptLock();
+    lock.tryLock(10000);
+    try {
+      var data = JSON.parse(e.postData.contents);
+      var sheet = SpreadsheetApp.openById(SS_ID).getSheetByName(SHEET_NAME);
+      var nextRow = 6;
+      while (sheet.getRange(nextRow, 1).getValue() !== "") { nextRow++; }
+      var masuk = parseFloat(data.uangMasuk) || 0;
+      var keluar = parseFloat(data.uangKeluar) || 0;
+      var formulaTotal = nextRow === 6 ? `=IF(ISBLANK(A6), "", F5 + D6 - E6)` : `=IF(ISBLANK(A${nextRow}), "", F${nextRow-1} + D${nextRow} - E${nextRow})`;
+
+      sheet.getRange(nextRow, 1).setValue(data.tanggal);
+      sheet.getRange(nextRow, 2).setValue(data.catatan);
+      sheet.getRange(nextRow, 3).setValue("");
+      sheet.getRange(nextRow, 4).setValue(masuk);
+      sheet.getRange(nextRow, 5).setValue(keluar);
+      sheet.getRange(nextRow, 6).setValue(formulaTotal);
+      
+      return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+    } finally { lock.releaseLock(); }
+  }
+
+  function getData() {
+    var sheet = SpreadsheetApp.openById(SS_ID).getSheetByName(SHEET_NAME);
+    var rows = sheet.getDataRange().getValues();
+    var result = [];
+    for (var i = 5; i < rows.length; i++) {
+      if (rows[i][0] !== "") {
+        result.push({ tanggal: rows[i][0], catatan: rows[i][1], uangMasuk: rows[i][3], uangKeluar: rows[i][4], totalSaldo: rows[i][5] });
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  }
+-->

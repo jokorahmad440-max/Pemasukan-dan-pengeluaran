@@ -5,11 +5,9 @@
     <style>
         body { width: 200px; font-family: Arial, sans-serif; padding: 12px; text-align: center; background-color: #f9f9f9; }
         h3 { margin-bottom: 12px; color: #333; font-size: 15px; }
-        button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; border-radius: 6px; color: white; transition: 0.2s; }
+        button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; border-radius: 6px; color: white; }
         #btnMulai { background-color: #28a745; margin-bottom: 8px; }
-        #btnMulai:hover { background-color: #218838; }
         #btnStop { background-color: #dc3545; }
-        #btnStop:hover { background-color: #c82333; }
         #status { margin-top: 12px; font-size: 13px; font-weight: bold; }
     </style>
 </head>
@@ -20,38 +18,39 @@
     <div id="status">Status: Memeriksa...</div>
 
     <script>
-        const btnMulai = document.getElementById('btnMulai');
-        const btnStop = document.getElementById('btnStop');
-        const statusText = document.getElementById('status');
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnMulai = document.getElementById('btnMulai');
+            const btnStop = document.getElementById('btnStop');
+            const statusText = document.getElementById('status');
 
-        // Perbarui tampilan status saat popup dibuka
-        chrome.storage.local.get(["isAktif"], (result) => {
-            if (result.isAktif) {
-                statusText.innerText = "Status: AKTIF 🟢";
-                statusText.style.color = "green";
-            } else {
-                statusText.innerText = "Status: BERHENTI 🔴";
-                statusText.style.color = "red";
-            }
-        });
-
-        // Klik tombol START
-        btnMulai.addEventListener('click', () => {
-            chrome.storage.local.set({ isAktif: true }, () => {
-                statusText.innerText = "Status: AKTIF 🟢";
-                statusText.style.color = "green";
-                alert("Otomatisasi Auto-Reject 9 Menit Berhasil Diaktifkan!");
-                chrome.tabs.reload(); // Refresh tab aktif agar skrip langsung jalan
+            // Cek status aktif/mati saat popup dibuka
+            chrome.storage.local.get(["isAktif"], (result) => {
+                if (result.isAktif) {
+                    statusText.innerText = "Status: AKTIF 🟢";
+                    statusText.style.color = "green";
+                } else {
+                    statusText.innerText = "Status: BERHENTI 🔴";
+                    statusText.style.color = "red";
+                }
             });
-        });
 
-        // Klik tombol STOP
-        btnStop.addEventListener('click', () => {
-            chrome.storage.local.set({ isAktif: false }, () => {
-                statusText.innerText = "Status: BERHENTI 🔴";
-                statusText.style.color = "red";
-                alert("Otomatisasi Berhasil Dihentikan.");
-            });
+            // Tombol START diklik
+            btnMulai.onclick = function() {
+                chrome.storage.local.set({ isAktif: true }, () => {
+                    statusText.innerText = "Status: AKTIF 🟢";
+                    statusText.style.color = "green";
+                    window.close(); // Tutup popup otomatis
+                });
+            };
+
+            // Tombol STOP diklik
+            btnStop.onclick = function() {
+                chrome.storage.local.set({ isAktif: false }, () => {
+                    statusText.innerText = "Status: BERHENTI 🔴";
+                    statusText.style.color = "red";
+                    window.close(); // Tutup popup otomatis
+                });
+            };
         });
     </script>
 </body>

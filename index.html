@@ -3,24 +3,28 @@
 <head>
     <meta charset="utf-8">
     <style>
-        body { width: 200px; font-family: Arial, sans-serif; padding: 12px; text-align: center; background-color: #f9f9f9; }
+        body { width: 220px; font-family: Arial, sans-serif; padding: 12px; text-align: center; background-color: #f9f9f9; }
         h3 { margin-bottom: 12px; color: #333; font-size: 15px; }
-        button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; border-radius: 6px; color: white; }
-        #btnMulai { background-color: #28a745; margin-bottom: 8px; }
+        button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; border-radius: 6px; color: white; margin-bottom: 8px; }
+        #btnMulai { background-color: #28a745; }
         #btnStop { background-color: #dc3545; }
-        #status { margin-top: 12px; font-size: 13px; font-weight: bold; }
+        #btnDownload { background-color: #007bff; margin-top: 6px; }
+        #btnDownload:hover { background-color: #0056b3; }
+        #status { margin-top: 8px; font-size: 13px; font-weight: bold; }
     </style>
 </head>
 <body>
     <h3>Auto-Reject 9 Menit</h3>
     <button id="btnMulai">START</button>
     <button id="btnStop">STOP</button>
+    <button id="btnDownload">📥 Download Ekstensi</button>
     <div id="status">Status: Memeriksa...</div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const btnMulai = document.getElementById('btnMulai');
             const btnStop = document.getElementById('btnStop');
+            const btnDownload = document.getElementById('btnDownload');
             const statusText = document.getElementById('status');
 
             // Cek status aktif/mati saat popup dibuka
@@ -39,7 +43,6 @@
                 chrome.storage.local.set({ isAktif: true }, () => {
                     statusText.innerText = "Status: AKTIF 🟢";
                     statusText.style.color = "green";
-                    window.close(); // Tutup popup otomatis
                 });
             };
 
@@ -48,9 +51,45 @@
                 chrome.storage.local.set({ isAktif: false }, () => {
                     statusText.innerText = "Status: BERHENTI 🔴";
                     statusText.style.color = "red";
-                    window.close(); // Tutup popup otomatis
                 });
             };
+
+            // Tombol Download File Ekstensi (manifest.json, content.js, popup.html)
+            btnDownload.onclick = function() {
+                // 1. Download manifest.json
+                const manifestContent = JSON.stringify({
+                    "manifest_version": 3,
+                    "name": "Auto Reject Antrean Akurat",
+                    "version": "1.1",
+                    "description": "Otomatis reject antrean > 9 menit dengan tombol start/stop.",
+                    "permissions": ["activeTab", "storage", "scripting"],
+                    "action": { "default_popup": "popup.html" },
+                    "content_scripts": [{ "matches": ["<all_urls>"], "js": ["content.js"], "run_at": "document_end" }]
+                }, null, 2);
+                downloadFile(manifestContent, "manifest.json", "application/json");
+
+                // 2. Download content.js
+                const contentJs = `// Batas waktu 9 menit dalam milidetik\nconst BATAS_WAKTU_MS = 9 * 60 * 1000;\nconst WAKTU_REFRESH_MS = 20 * 1000;\n\nfunction jalankanOtomasiAkurat() {\n    chrome.storage.local.get(["isAktif"], (result) => {\n        if (!result.isAktif) return;\n        let aksiDijalankan = false;\n        const barisData = document.querySelectorAll("table tbody tr");\n        barisData.forEach((baris) => {\n            const matchWaktu = baris.innerText.match(/\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/);\n            if (matchWaktu && matchWaktu.length > 0) {\n                const waktuMasuk = new Date(matchWaktu[0]).getTime();\n                const waktuSekarang = new Date().getTime();\n                if ((waktuSekarang - waktuMasuk) > BATAS_WAKTU_MS) {\n                    const tombolAction = baris.querySelector("button, .dropdown-toggle, [id*='Action'], a.btn");\n                    if (tombolAction && !baris.dataset.sudahDiproses) {\n                        baris.dataset.sudahDiproses = "true";\n                        aksiDijalankan = true;\n                        tombolAction.click();\n                        setTimeout(() => {\n                            const semuaElemen = document.querySelectorAll("a, button, div, span, li");\n                            for (let el of semuaElemen) {\n                                if (el.textContent.trim() === "Reject" && el.offsetParent !== null) {\n                                    el.click();\n                                    break;\n                                }\n                            }\n                        }, 600);\n                    }\n                }\n            }\n        });\n        setTimeout(() => {\n            chrome.storage.local.get(["isAktif"], (resCheck) => {\n                if (resCheck.isAktif && !aksiDijalankan) {\n                    window.location.reload();\n                }\n            });\n        }, WAKTU_REFRESH_MS);\n    });\n}\nwindow.addEventListener("load", () => { setTimeout(jalankanOtomasiAkurat, 3000); });`;
+                downloadFile(contentJs, "content.js", "text/javascript");
+
+                // 3. Download popup.html ini sendiri
+                const popupHtml = document.documentElement.outerHTML;
+                downloadFile(popupHtml, "popup.html", "text/html");
+
+                alert("Semua file ekstensi (manifest.json, content.js, popup.html) berhasil didownload! Cek folder Download Anda.");
+            };
+
+            function downloadFile(content, filename, contentType) {
+                const blob = new Blob([content], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
         });
     </script>
 </body>

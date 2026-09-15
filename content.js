@@ -1,47 +1,72 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const btnMulai = document.getElementById("btnMulai");
-    const btnStop = document.getElementById("btnStop");
-    const btnDownloadZip = document.getElementById("btnDownloadZip");
-    const statusDiv = document.getElementById("status");
+// Batas waktu 9 menit dalam milidetik (9 * 60 * 1000)
+const BATAS_WAKTU_MS = 9 * 60 * 1000; 
+// Waktu tunggu sebelum halaman me-refresh ulang jika belum ada aksi (20 detik)
+const WAKTU_REFRESH_MS = 20 * 1000;    
 
-    if (!btnMulai || !btnStop) {
-        console.error("Elemen tombol tidak ditemukan di HTML!");
-        return;
-    }
-
-    // Cek status saat popup dibuka
+function jalankanOtomasiAkurat() {
+    // Cek apakah ekstensi sedang aktif (status ON dari popup)
     chrome.storage.local.get(["isAktif"], (result) => {
-        if (result.isAktif) {
-            statusDiv.textContent = "Status: AKTIF (Berjalan)";
-            statusDiv.style.color = "green";
-        } else {
-            statusDiv.textContent = "Status: NONAKTIF";
-            statusDiv.style.color = "red";
+        if (result.isAktif === false) {
+            console.log("Auto-Reject sedang nonaktif.");
+            return;
         }
-    });
 
-    // Tombol START diklik
-    btnMulai.addEventListener("click", () => {
-        chrome.storage.local.set({ isAktif: true }, () => {
-            statusDiv.textContent = "Status: AKTIF (Berjalan)";
-            statusDiv.style.color = "green";
-            alert("Auto-Reject berhasil DIHIDUPKAN!");
-        });
-    });
+        console.log("Memeriksa data antrean...");
+        let aksiDijalankan = false;
 
-    // Tombol STOP diklik
-    btnStop.addEventListener("click", () => {
-        chrome.storage.local.set({ isAktif: false }, () => {
-            statusDiv.textContent = "Status: NONAKTIF";
-            statusDiv.style.color = "red";
-            alert("Auto-Reject berhasil DIMATIKAN!");
-        });
-    });
+        // Ambil semua baris data pada tabel utama
+        const barisData = document.querySelectorAll("table tbody tr");
 
-    // Tombol Download ZIP
-    if (btnDownloadZip) {
-        btnDownloadZip.addEventListener("click", () => {
-            alert("Pastikan semua file ekstensi sudah berada di dalam satu folder yang sama.");
+        barisData.forEach((baris) => {
+            // Ambil teks datetime menggunakan pola regex standar tanggal & waktu (YYYY-MM-DD HH:MM:SS)
+            const matchWaktu = baris.innerText.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
+
+            if (matchWaktu && matchWaktu.length > 0) {
+                const formatIsoWaktu = matchWaktu[0].replace(" ", "T");
+                const waktuMasuk = new Date(formatIsoWaktu).getTime();
+                const waktuSekarang = new Date().getTime();
+                const selisihWaktu = waktuSekarang - waktuMasuk;
+
+                // Jika selisih waktu sudah melebihi 9 menit
+                if (selisihWaktu > BATAS_WAKTU_MS) {
+                    const tombolAction = baris.querySelector("button, .dropdown-toggle, [id*='Action'], a.btn");
+
+                    if (tombolAction && !baris.dataset.sudahDiproses) {
+                        baris.dataset.sudahDiproses = "true";
+                        aksiDijalankan = true;
+                        console.log("Antrean > 9 menit ditemukan. Mengeklik tombol Action...");
+                        
+                        tombolAction.click();
+
+                        // Beri jeda 600ms agar menu dropdown pilihan muncul sempurna
+                        setTimeout(() => {
+                            const semuaElemen = document.querySelectorAll("a, button, div, span, li");
+                            for (let el of semuaElemen) {
+                                if (el.textContent.trim() === "Reject" && el.offsetParent !== null) {
+                                    el.click();
+                                    console.log("Berhasil mengeklik tombol Reject!");
+                                    break;
+                                }
+                            }
+                        }, 600);
+                    }
+                }
+            }
         });
-    }
+
+        // Jika tidak ada antrean yang perlu di-reject, lakukan auto-refresh
+        setTimeout(() => {
+            chrome.storage.local.get(["isAktif"], (resCheck) => {
+                if (resCheck.isAktif !== false && !aksiDijalankan) {
+                    console.log("Melakukan refresh halaman untuk memperbarui antrean...");
+                    window.location.reload();
+                }
+            });
+        }, WAKTU_REFRESH_MS);
+    });
+}
+
+// Jalankan fungsi otomatisasi setelah halaman selesai dimuat sempurna (jeda 3 detik)
+window.addEventListener("load", () => {
+    setTimeout(jalankanOtomasiAkurat, 3000);
 });

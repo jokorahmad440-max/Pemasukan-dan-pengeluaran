@@ -22,7 +22,9 @@ function jalankanOtomasiAkurat() {
             const matchWaktu = baris.innerText.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
 
             if (matchWaktu && matchWaktu.length > 0) {
-                const waktuMasuk = new Date(matchWaktu[0]).getTime();
+                // Ubah spasi menjadi 'T' agar format standarnya kompatibel dibaca Date() di semua browser
+                const formatIsoWaktu = matchWaktu[0].replace(" ", "T");
+                const waktuMasuk = new Date(formatIsoWaktu).getTime();
                 const waktuSekarang = new Date().getTime();
                 const selisihWaktu = waktuSekarang - waktuMasuk;
 

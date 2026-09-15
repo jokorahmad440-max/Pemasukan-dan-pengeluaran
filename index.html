@@ -7,9 +7,7 @@
         h3 { margin-bottom: 12px; color: #333; font-size: 15px; }
         button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; border-radius: 6px; color: white; margin-bottom: 8px; }
         #btnMulai { background-color: #28a745; }
-        #btnMulai:hover { background-color: #218838; }
         #btnStop { background-color: #dc3545; }
-        #btnStop:hover { background-color: #c82333; }
         #status { margin-top: 8px; font-size: 13px; font-weight: bold; }
     </style>
 </head>
@@ -36,21 +34,19 @@
                 }
             });
 
-            // Aksi tombol START
+            // Tombol START diklik
             btnMulai.onclick = () => {
                 chrome.storage.local.set({ isAktif: true }, () => {
                     statusDiv.textContent = "Status: AKTIF 🟢";
                     statusDiv.style.color = "green";
-                    console.log("Diaktifkan");
                 });
             };
 
-            // Aksi tombol STOP
+            // Tombol STOP diklik
             btnStop.onclick = () => {
                 chrome.storage.local.set({ isAktif: false }, () => {
                     statusDiv.textContent = "Status: NONAKTIF 🔴";
                     statusDiv.style.color = "red";
-                    console.log("Dimatikan");
                 });
             };
         });

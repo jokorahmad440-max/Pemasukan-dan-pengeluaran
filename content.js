@@ -6,7 +6,8 @@ const WAKTU_REFRESH_MS = 20 * 1000;
 function jalankanOtomasiAkurat() {
     // Cek apakah ekstensi sedang aktif (status ON dari popup)
     chrome.storage.local.get(["isAktif"], (result) => {
-        if (!result.isAktif) {
+        // Default jika belum diset, anggap aktif atau nonaktif (sesuaikan keinginan)
+        if (result.isAktif === false) {
             console.log("Auto-Reject sedang nonaktif.");
             return;
         }
@@ -61,7 +62,7 @@ function jalankanOtomasiAkurat() {
         setTimeout(() => {
             // Cek sekali lagi pastikan masih aktif sebelum refresh
             chrome.storage.local.get(["isAktif"], (resCheck) => {
-                if (resCheck.isAktif && !aksiDijalankan) {
+                if (resCheck.isAktif !== false && !aksiDijalankan) {
                     console.log("Melakukan refresh halaman untuk memperbarui antrean...");
                     window.location.reload();
                 }
